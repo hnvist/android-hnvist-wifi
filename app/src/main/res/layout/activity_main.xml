@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#485563"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#a3bded"
+        android:id="@+id/toast"
+        android:visibility="invisible"
+        android:orientation="horizontal"
+        android:padding="15dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/toastText"
+            android:textColor="#FFF"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:textIsSelectable="true"
+            android:text="已连接到：http://test.durl.ga/"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:layout_weight="1">
+            <Button
+                android:layout_width="60dp"
+                android:layout_height="30dp"
+                android:id="@+id/openUrl"
+                android:background="#6FFF"
+                android:text="打开"
+                />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/connection"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:id="@+id/connectionText"
+                android:background="@drawable/back_circle"
+                android:gravity="center"
+                android:text="连 接"
+                android:textColor="#FFF"
+                android:textSize="25sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/main_result"
+                    android:text="待连接！"
+                    android:textColor="#FFF"
+                    android:textSize="18sp" />
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/openQQ"
+        android:layout_marginBottom="5dp"
+        android:paddingHorizontal="10dp"
+        android:gravity="center"
+        android:textIsSelectable="true"
+        android:text="该软件仅用于技术学习，任何人不得用于盈利，开发者不承担任何法律责任"
+        android:textColor="#6FFF"
+        android:textSize="16sp" />
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/openWeb"
+        android:layout_marginBottom="15dp"
+        android:gravity="center"
+        android:textIsSelectable="true"
+        android:text="\@机电信息学院移动互联专业同学技术交流开发!"
+        android:textColor="#6FFF"
+        android:textSize="16sp" />
+
+</LinearLayout>
