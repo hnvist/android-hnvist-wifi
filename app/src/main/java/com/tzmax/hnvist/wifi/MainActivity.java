@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -28,11 +29,17 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 import okhttp3.Call;
@@ -47,7 +54,9 @@ public class MainActivity extends Activity {
     Context mContext;
     boolean isConnection, isGetAnnouncement;
     LinearLayout mConnection, mToast, mSelectAccount;
-    TextView mConnectionText, mToastText, mOpenWeb, mResultText;
+    TextView mConnectionText, mToastText, mOpenWeb, mResultText, mAccountStr, mAccountType;
+
+    AccountData accountData = new AccountData("aqxy@test", "免费账号", "123");
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,6 +67,8 @@ public class MainActivity extends Activity {
         initView();
         getAnnouncement();
         showAnnouncement();
+        loadAccount(accountData);
+        addDataAccount(accountData);
     }
 
     private void initView() {
@@ -66,6 +77,9 @@ public class MainActivity extends Activity {
         mConnectionText = findViewById(R.id.connectionText);
         mResultText = findViewById(R.id.main_result);
         mSelectAccount = findViewById(R.id.main_select_account);
+
+        mAccountStr = findViewById(R.id.main_text_account_str);
+        mAccountType = findViewById(R.id.main_text_account_type);
 
         // 连接按钮点击事件
         mConnection.setOnClickListener(new View.OnClickListener() {
@@ -90,7 +104,7 @@ public class MainActivity extends Activity {
     }
 
     void run() {
-        String Url = "http://172.16.0.30:801/eportal/?c=Portal&a=login&callback=tzmax&login_method=1&user_account=aqxy@test&user_password=123";
+        String Url = "http://172.16.0.30:801/eportal/?c=Portal&a=login&callback=tzmax&login_method=1&user_account=" + accountData.account + "&user_password=" + accountData.password;
         int time = 2000;
         isGetAnnouncement = false;
 
@@ -310,7 +324,70 @@ public class MainActivity extends Activity {
 
     }
 
+    // 加载账号信息到页面
+    void loadAccount(AccountData account) {
+        this.accountData = account;
+
+        if (mAccountStr != null) {
+            mAccountStr.setText(accountData.getAccount());
+        }
+        if (mAccountType != null) {
+            mAccountType.setText(accountData.getType());
+        }
+
+    }
+
+    // 获取全部账号列表
+    ArrayList<AccountData> getDataAccountList() {
+        ArrayList<AccountData> data = new ArrayList<AccountData>();
+        SharedPreferences pref = getSharedPreferences("data", MODE_PRIVATE);
+        String json = pref.getString("accountList", "[]");
+
+        if (json != null) {
+            JsonParser jsonParser = new JsonParser();
+            JsonArray jsonElements = jsonParser.parse(json).getAsJsonArray();
+            for (JsonElement item : jsonElements) {
+                AccountData accountData = new Gson().fromJson(item, AccountData.class);
+                data.add(accountData);
+            }
+        }
+
+        return data;
+    }
+
+    // 添加一个账号到列表
+    void addDataAccount(AccountData account) {
+
+        ArrayList<AccountData> listData = getDataAccountList();
+
+        // 判断账号存在的话就是修改相关数据
+        boolean isEdit = false;
+        for (int i = 0; i < listData.size(); i++) {
+            AccountData item = listData.get(i);
+            if (item != null && item.account != null && item.account.equals(account.account)) {
+                listData.set(i, account);
+                isEdit = true;
+            }
+        }
+        if (!isEdit) {
+            // 不是修改数据的话就是添加数据
+            listData.add(account);
+        }
+
+        String json = new Gson().toJson(listData);
+        SharedPreferences.Editor editor = getSharedPreferences("data", MODE_PRIVATE).edit();
+        editor.putString("accountList", json);
+        editor.commit();
+    }
+
+    // 显示选择账号列表
     void showAccountList() {
+
+        if (isConnection) {
+            toast("需要先断开连接才能切换账号！");
+            return;
+        }
+
         Dialog dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_list);
         WindowManager.LayoutParams lp = dialog.getWindow().getAttributes();
@@ -344,14 +421,23 @@ public class MainActivity extends Activity {
         });
 
         ListView mList = dialog.findViewById(R.id.dialog_list);
-        ArrayList<AccountData> datas = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            datas.add(new AccountData("11111111" + i, (i % 2 == 0) ? "合租账号" : "本地账号", ""));
-        }
-        AccountListAdapter listAdapter = new AccountListAdapter(datas, this);
+        ArrayList<AccountData> listData = getDataAccountList();
+
+        mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                AccountData data = listData.get(position);
+                loadAccount(data);
+                dialog.cancel();
+            }
+        });
+        AccountListAdapter listAdapter = new AccountListAdapter(listData, this);
+
 
         if (mList != null) {
             mList.setAdapter(listAdapter);
+        } else {
+            toast("出错啦，请反馈给我们。error: -10967");
         }
 
 
