@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#485563"
+    android:background="@color/page_background"
     android:gravity="center"
     android:orientation="vertical">
 
@@ -59,6 +59,7 @@
                 android:layout_width="200dp"
                 android:layout_height="200dp"
                 android:background="@drawable/back_circle"
+                android:foreground="?android:attr/selectableItemBackground"
                 android:gravity="center"
                 android:text="连 接"
                 android:textColor="#FFF"
@@ -98,10 +99,13 @@
         android:background="#1FFF" />
 
     <LinearLayout
+        android:id="@+id/main_select_account"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:padding="15dp">
+        android:foreground="?android:attr/selectableItemBackground"
+        android:paddingHorizontal="15dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="15dp">
 
         <LinearLayout
             android:layout_width="match_parent"

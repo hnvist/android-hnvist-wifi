@@ -2,15 +2,28 @@ package com.tzmax.hnvist.wifi;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -20,6 +33,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -32,7 +46,7 @@ public class MainActivity extends Activity {
     String TAG = "binDebug";
     Context mContext;
     boolean isConnection, isGetAnnouncement;
-    LinearLayout mConnection, mToast;
+    LinearLayout mConnection, mToast, mSelectAccount;
     TextView mConnectionText, mToastText, mOpenWeb, mResultText;
 
     @Override
@@ -51,13 +65,25 @@ public class MainActivity extends Activity {
         mConnection = findViewById(R.id.connection);
         mConnectionText = findViewById(R.id.connectionText);
         mResultText = findViewById(R.id.main_result);
+        mSelectAccount = findViewById(R.id.main_select_account);
 
+        // 连接按钮点击事件
         mConnection.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                run();
+
                 isConnection = !isConnection;
                 setConnection(isConnection);
+                run();
+
+            }
+        });
+
+        // 绑定切换账号点击事件
+        mSelectAccount.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showAccountList();
             }
         });
 
@@ -94,7 +120,7 @@ public class MainActivity extends Activity {
                                         setResultText("认证成功！");
 
                                         // 判断是否获取公告，每次连接只获取一次
-                                        if(!isGetAnnouncement) {
+                                        if (!isGetAnnouncement) {
                                             isGetAnnouncement = true;
                                             getAnnouncement();
                                         }
@@ -135,6 +161,9 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
                         isConnection = b;
+
+                        // 设置状态文本
+                        setResultText(b ? "连接中…" : "待连接!");
 
                         // 设置点击圈颜色
                         mConnectionText.setBackground(getDrawable(b ? R.drawable.back_circle_ok : R.drawable.back_circle));
@@ -281,5 +310,161 @@ public class MainActivity extends Activity {
 
     }
 
+    void showAccountList() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_list);
+        WindowManager.LayoutParams lp = dialog.getWindow().getAttributes();
+        lp.gravity = Gravity.BOTTOM;
+
+        int dHeight = getWindowManager().getDefaultDisplay().getHeight();
+        lp.height = (dHeight / 10) * 6;
+        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+        dialog.getWindow().setAttributes(lp);
+        dialog.getWindow().setBackgroundDrawable(null);
+        dialog.show();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        // 去除黑框
+
+        Button mFlatshare = dialog.findViewById(R.id.dialog_button_flatshare);
+        Button mAddaccunt = dialog.findViewById(R.id.dialog_button_addaccount);
+
+        // 合租账号点击事件绑定
+        mFlatshare.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toast("安院校园网合租平台即将上线，敬请期待…");
+            }
+        });
+
+        mAddaccunt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toast("点击了添加本地账号");
+            }
+        });
+
+        ListView mList = dialog.findViewById(R.id.dialog_list);
+        ArrayList<AccountData> datas = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            datas.add(new AccountData("11111111" + i, (i % 2 == 0) ? "合租账号" : "本地账号", ""));
+        }
+        AccountListAdapter listAdapter = new AccountListAdapter(datas, this);
+
+        if (mList != null) {
+            mList.setAdapter(listAdapter);
+        }
+
+
+    }
+
+    void toast(String msg) {
+        runOnUiThread(new Thread() {
+            @Override
+            public void run() {
+                Toast.makeText(getBaseContext(), msg, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    class AccountListAdapter extends BaseAdapter {
+
+        ArrayList<AccountData> list;
+        Context context;
+
+        public AccountListAdapter(ArrayList<AccountData> list, Context context) {
+            this.list = list;
+            this.context = context;
+        }
+
+
+        @Override
+        public int getCount() {
+            return list.size();
+        }
+
+        @Override
+        public AccountData getItem(int position) {
+            return list.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+            AccountData data = list.get(position);
+            View view;
+            ViewHolder viewHolder;
+
+            if (convertView == null) {
+                // inflate出子项布局，实例化其中的图片控件和文本控件
+                view = LayoutInflater.from(getBaseContext()).inflate(R.layout.list_item, null);
+
+                viewHolder = new ViewHolder();
+                // 通过id得到图片控件实例
+                viewHolder.type = view.findViewById(R.id.list_item_text_type);
+                // 通过id得到文本空间实例
+                viewHolder.account = view.findViewById(R.id.list_item_text_account);
+                // 缓存图片控件和文本控件的实例
+                view.setTag(viewHolder);
+            } else {
+                view = convertView;
+                // 取出缓存
+                viewHolder = (ViewHolder) view.getTag();
+            }
+
+            viewHolder.type.setText(data.type);
+            viewHolder.account.setText(data.account);
+
+
+            return view;
+        }
+
+
+        class ViewHolder {
+            TextView type;
+            TextView account;
+        }
+    }
+
+    class AccountData {
+        String account;
+        String type;
+        String password;
+
+        public AccountData(String account, String type, String password) {
+            this.account = account;
+            this.type = type;
+            this.password = password;
+        }
+
+        public void setAccount(String account) {
+            this.account = account;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
+        }
+
+        public String getAccount() {
+            return account;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+    }
 
 }
