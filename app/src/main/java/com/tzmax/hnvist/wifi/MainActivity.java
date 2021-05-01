@@ -20,6 +20,7 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -68,7 +69,11 @@ public class MainActivity extends Activity {
         getAnnouncement();
         showAnnouncement();
         loadAccount(accountData);
+
+        // 将默认账号添加到缓存
         addDataAccount(accountData);
+
+        showAddAccountDialog();
     }
 
     private void initView() {
@@ -409,6 +414,7 @@ public class MainActivity extends Activity {
         mFlatshare.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dialog.cancel();
                 toast("安院校园网合租平台即将上线，敬请期待…");
             }
         });
@@ -416,7 +422,8 @@ public class MainActivity extends Activity {
         mAddaccunt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                toast("点击了添加本地账号");
+                dialog.cancel();
+                showAddAccountDialog();
             }
         });
 
@@ -443,6 +450,58 @@ public class MainActivity extends Activity {
 
     }
 
+    // 显示添加账号弹窗
+    void showAddAccountDialog() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_add_account);
+        WindowManager.LayoutParams lp = dialog.getWindow().getAttributes();
+        lp.gravity = Gravity.BOTTOM;
+
+        int dHeight = getWindowManager().getDefaultDisplay().getHeight();
+        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        lp.width = WindowManager.LayoutParams.MATCH_PARENT;
+        dialog.getWindow().setAttributes(lp);
+        dialog.getWindow().setBackgroundDrawable(null);
+        dialog.show();
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        // 去除黑框
+
+        EditText mEditAccount = dialog.findViewById(R.id.dialog_add_edit_account);
+        EditText mEditPassword = dialog.findViewById(R.id.dialog_add_edit_password);
+        Button mBtnCancel = dialog.findViewById(R.id.dialog_add_button_cancel);
+        Button mBtnSave = dialog.findViewById(R.id.dialog_add_button_save);
+
+        // 取消按钮点击事件绑定
+        mBtnCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.cancel();
+            }
+        });
+
+        // 保存按钮点击事件绑定
+        mBtnSave.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String accountStr = mEditAccount.getText().toString();
+                String passwordStr = mEditPassword.getText().toString();
+
+                if (accountStr == null || accountStr.equals("") || passwordStr == null || passwordStr.equals("")) {
+                    toast("账号密码不得为空！");
+                    return;
+                } else {
+                    AccountData data = new AccountData(accountStr + "@hnvist", "本地账号", passwordStr);
+                    loadAccount(data);
+                    addDataAccount(data);
+                    toast("账号添加成功！");
+                    dialog.cancel();
+                }
+            }
+        });
+
+    }
+
+    // Toast 工具方法
     void toast(String msg) {
         runOnUiThread(new Thread() {
             @Override
@@ -452,6 +511,7 @@ public class MainActivity extends Activity {
         });
     }
 
+    // 账号列表适配器
     class AccountListAdapter extends BaseAdapter {
 
         ArrayList<AccountData> list;
