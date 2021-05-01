@@ -72,8 +72,6 @@ public class MainActivity extends Activity {
 
         // 将默认账号添加到缓存
         addDataAccount(accountData);
-
-        showAddAccountDialog();
     }
 
     private void initView() {
