@@ -57,7 +57,7 @@ public class MainActivity extends Activity {
     LinearLayout mConnection, mToast, mSelectAccount;
     TextView mConnectionText, mToastText, mOpenWeb, mResultText, mAccountStr, mAccountType;
 
-    AccountData accountData = new AccountData("aqxy@test", "免费账号", "123");
+    AccountData accountData;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -68,6 +68,8 @@ public class MainActivity extends Activity {
         initView();
         getAnnouncement();
         showAnnouncement();
+
+        this.accountData = getDefaultAccount();
         loadAccount(accountData);
 
         // 将默认账号添加到缓存
@@ -338,7 +340,30 @@ public class MainActivity extends Activity {
             mAccountType.setText(accountData.getType());
         }
 
+        // 将账号设置成默认账号，下次打开应用默认选中
+        setDefaultAccount(account);
+
     }
+
+    // 设置默认账号
+    void setDefaultAccount(AccountData account) {
+        String json = new Gson().toJson(account);
+        SharedPreferences.Editor editor = getSharedPreferences("data", MODE_PRIVATE).edit();
+        editor.putString("defaultAccount", json);
+        editor.commit();
+    }
+
+    // 获取默认账号
+    AccountData getDefaultAccount() {
+        SharedPreferences pref = getSharedPreferences("data", MODE_PRIVATE);
+        String json = pref.getString("defaultAccount", "{}");
+        if (json != null && !json.equals("{}")) {
+            AccountData accountData = new Gson().fromJson(json, AccountData.class);
+            return accountData;
+        }
+        return new AccountData("aqxy@test", "免费账号", "123");
+    }
+
 
     // 获取全部账号列表
     ArrayList<AccountData> getDataAccountList() {
