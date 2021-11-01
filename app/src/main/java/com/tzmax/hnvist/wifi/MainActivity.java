@@ -158,6 +158,7 @@ public class MainActivity extends Activity {
 
                     try {
                         Thread.sleep(time);
+                        onApiLogout();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                         // 出现错误，断开连接
@@ -226,6 +227,46 @@ public class MainActivity extends Activity {
         isConnection = false;
         setConnection(isConnection);
         setResultText(msg);
+    }
+
+    // 注销登陆
+    void onApiLogout() {
+        try {
+            setResultText("开始请求认证…");
+            OkHttpClient okHttpClient = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url("http://172.16.0.30:801/eportal/?c=Portal&a=logout&a=login&callback=tzmax&login_method=1&user_account=" + accountData.account + "&user_password=" + accountData.password)
+                    .build();
+            okHttpClient.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    if (response.isSuccessful()) {
+                        String data = response.body().string();
+                        if (response.code() == 200) {
+                            Log.d(TAG, "认证成功！" + data);
+                            setResultText("认证成功！");
+
+                            // 判断是否获取公告，每次连接只获取一次
+                            if (!isGetAnnouncement) {
+                                isGetAnnouncement = true;
+                                getAnnouncement();
+                            }
+
+                        } else {
+                            // 出现错误，断开连接
+                            onApiError("ErrorCode:1001，认证失败！请检查是否连接 wifi，也可能是免费认证方法失效！");
+                        }
+                    }
+                }
+            });
+        } catch (Error error) {
+            // 出现错误，断开连接
+            onApiError("ErrorCode:1002，认证失败！请检查是否连接 wifi，也可能是免费认证方法失效！");
+        }
     }
 
     // 获取公告
