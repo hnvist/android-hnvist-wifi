@@ -84,6 +84,7 @@
                     android:layout_height="wrap_content"
                     android:text="待连接！"
                     android:textColor="#FFF"
+                    android:paddingHorizontal="50dp"
                     android:textSize="18sp" />
 
             </LinearLayout>

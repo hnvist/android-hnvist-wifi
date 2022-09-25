@@ -58,6 +58,7 @@ public class MainActivity extends Activity {
     TextView mConnectionText, mToastText, mOpenWeb, mResultText, mAccountStr, mAccountType;
 
     AccountData accountData;
+    Thread thread;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -92,8 +93,8 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
 
                 isConnection = !isConnection;
-                setConnection(isConnection);
                 run();
+                setConnection(isConnection);
 
             }
         });
@@ -113,9 +114,26 @@ public class MainActivity extends Activity {
         int time = 2000;
         isGetAnnouncement = false;
 
-        new Thread(new Runnable() {
+        // 断开连接
+        if (!isConnection) {
+            onApiLogout(); // 注销登录
+            if (thread != null) {
+                try {
+                    thread.interrupt();
+                    thread = null;
+                } catch (Error e) {
+                    e.printStackTrace();
+                }
+            }
+            return;
+        }
+
+        thread = new Thread(new Runnable() {
             @Override
             public void run() {
+
+                // 先注销登录再登录
+                onApiLogout();
 
                 while (isConnection) {
 
@@ -146,6 +164,7 @@ public class MainActivity extends Activity {
 
                                     } else {
                                         // 出现错误，断开连接
+                                        onApiLogout();
                                         onApiError("ErrorCode:1001，认证失败！请检查是否连接 wifi，也可能是免费认证方法失效！");
                                     }
                                 }
@@ -153,13 +172,15 @@ public class MainActivity extends Activity {
                         });
                     } catch (Error error) {
                         // 出现错误，断开连接
+                        onApiLogout();
                         onApiError("ErrorCode:1002，认证失败！请检查是否连接 wifi，也可能是免费认证方法失效！");
                     }
 
                     try {
                         Thread.sleep(time);
-                        onApiLogout();
+                        // onApiLogout();
                     } catch (InterruptedException e) {
+                        onApiLogout();
                         e.printStackTrace();
                         // 出现错误，断开连接
                         onApiError("ErrorCode:1003，认证失败！请检查是否连接 wifi，也可能是免费认证方法失效！");
@@ -167,35 +188,28 @@ public class MainActivity extends Activity {
                 }
 
             }
-        }).start();
+        });
+        thread.start();
     }
 
     // 设置连接状态
     void setConnection(final boolean b) {
-
-        new Thread(new Runnable() {
+        runOnUiThread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void run() {
-                runOnUiThread(new Runnable() {
-                    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-                    @Override
-                    public void run() {
-                        isConnection = b;
+                isConnection = b;
 
-                        // 设置状态文本
-                        setResultText(b ? "连接中…" : "待连接!");
+                // 设置状态文本
+                setResultText(b ? "连接中…" : "待连接!");
 
-                        // 设置点击圈颜色
-                        mConnectionText.setBackground(getDrawable(b ? R.drawable.back_circle_ok : R.drawable.back_circle));
-                        // 设置点击圈文本
-                        mConnectionText.setText(b ? "断 开" : "连 接");
+                // 设置点击圈颜色
+                mConnectionText.setBackground(getDrawable(b ? R.drawable.back_circle_ok : R.drawable.back_circle));
+                // 设置点击圈文本
+                mConnectionText.setText(b ? "断 开" : "连 接");
 
-                    }
-                });
             }
-        }).start();
-
-
+        });
     }
 
     // 设置状态值文本
